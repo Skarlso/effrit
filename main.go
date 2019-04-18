@@ -1,18 +1,12 @@
 package main
 
 import (
-	"github.com/spf13/cobra"
+	"github.com/Skarlso/effrit/cmd"
 	"log"
 )
 
-var RootCmd = &cobra.Command{
-	Use: "effrit",
-	Short: "effrit -- look deep",
-	SilenceUsage: true,
-}
-
 func main()  {
-	if err := RootCmd.Execute(); err != nil {
+	if err := cmd.RootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
 }
