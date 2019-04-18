@@ -1,16 +1,20 @@
 package pkg
 
 import (
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/schollz/progressbar/v2"
 )
 
 func Scan(ignoreList []string) error {
-	goFiles := make([]os.FileInfo, 0)
+	goFiles := make(map[string]string, 0)
 	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -21,7 +25,7 @@ func Scan(ignoreList []string) error {
 			}
 		} else {
 			if filepath.Ext(info.Name()) == ".go" {
-				goFiles = append(goFiles, info)
+				goFiles[path] = info.Name()
 			}
 		}
 
@@ -34,9 +38,34 @@ func Scan(ignoreList []string) error {
 	log.Println("Scanning total number of go files: ", len(goFiles))
 	total := len(goFiles)
 	bar := progressbar.New(total)
-	for _ = range goFiles {
+	//listOfPackages := make([]string, 0)
+	for path, file := range goFiles {
+		src, err := ioutil.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		fset := token.NewFileSet()
+		f, err := parser.ParseFile(fset, file, src, parser.PackageClauseOnly)
+		if err != nil {
+			return err
+		}
+		ast.Print(fset, f)
+		ast.Inspect(f, func(n ast.Node) bool{
+			var s string
+			switch x := n.(type) {
+			case *ast.Ident:
+				s = x.Name
+			}
+			if s != "" {
+				fmt.Println("Name: ", s)
+				//fmt.Printf("%s:\t%s\n", fset.Position(n.Pos()), s)
+			}
+			return true
+		})
+		//for _, i := range f.Imports {
+		//	fmt.Println(i.Path.Value)
+		//}
 		_ = bar.Add(1)
-		time.Sleep(time.Millisecond)
 	}
 	_ = bar.Finish()
 	return nil
