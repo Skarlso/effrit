@@ -29,7 +29,7 @@ func Display(packages map[string]Package) {
 		} else if p.Stability == 1 {
 			c = red
 		}
-		stability := fmt.Sprintf("%.2f", p.Stability)
+		stability := fmt.Sprintf("%.1f", p.Stability)
 		writeColumns(table, []string{p.Name, c.Sprint(stability)})
 	}
 	table.Flush()
