@@ -12,14 +12,14 @@ type Package struct {
 	Name              string
 	FullName          string
 	Imports           []string
-	ImportCount       int
-	DependedOnByCount int
+	ImportCount       float64
+	DependedOnByCount float64
 	Stability         float64
 }
 
 // Scan will scan a project using go list. As go list is running
 // in the background, scan will display a waiting indicator.
-func Scan() (map[string]Package, error) {
+func Scan(projectName string) (map[string]Package, error) {
 	packages := make(map[string]Package)
 	// Format: [packageName] = {outSide import count}
 	c := "go"
@@ -55,6 +55,15 @@ func Scan() (map[string]Package, error) {
 		}
 		for _, i := range is {
 			if bytes.Contains(i, []byte(".")) {
+				if len(projectName) > 0 {
+					if bytes.Contains(i, []byte(projectName)) {
+						// If a project name is defined, we will
+						// only count imports which are in this project.
+						p.Imports = append(p.Imports, string(i))
+						p.ImportCount++
+					}
+					continue
+				}
 				p.Imports = append(p.Imports, string(i))
 				p.ImportCount++
 			}

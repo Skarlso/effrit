@@ -16,16 +16,22 @@ they are in. It will gather all defined packages.
 	RunE: scan,
 }
 
+var scanCmdOptions struct {
+	projectName string
+}
+
 func init() {
+	scanCmd.Flags().StringVarP(&scanCmdOptions.projectName, "project-name", "p", "", "Define the name of the project.")
 	RootCmd.AddCommand(scanCmd)
 }
 
 func scan(cmd *cobra.Command, args []string) error {
-	packages, err := pkg.Scan()
+	packages, err := pkg.Scan(scanCmdOptions.projectName)
 	if err != nil {
 		return err
 	}
 	packages = pkg.Analyse(packages)
 	fmt.Printf("%+v", packages)
+	// fmt.Println(packages)
 	return nil
 }

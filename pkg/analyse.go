@@ -11,5 +11,5 @@ func Analyse(packages map[string]Package) map[string]Package {
 }
 
 func calculateStability(p Package) float64 {
-	return 0.0
+	return p.ImportCount / (p.ImportCount + p.DependedOnByCount)
 }
