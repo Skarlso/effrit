@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os/exec"
 	"path/filepath"
@@ -15,8 +16,8 @@ type Package struct {
 	DependedOnByCount int
 }
 
-func Scan() (map[string]*Package, error) {
-	packages := make(map[string]*Package)
+func Scan() (map[string]Package, error) {
+	packages := make(map[string]Package)
 	// Format: [packageName] = {outSide import count}
 	c := "go"
 	args := []string{
@@ -47,7 +48,7 @@ func Scan() (map[string]*Package, error) {
 		pkg := split[0]
 		imports := split[1]
 		is := bytes.Split(imports, []byte(","))
-		p := &Package{
+		p := Package{
 			Name: filepath.Base(string(pkg)),
 			Imports: make([]string, 0),
 			ImportCount: 0,
@@ -67,8 +68,10 @@ func Scan() (map[string]*Package, error) {
 		for _, i := range imports {
 			if p, ok := packages[i]; ok {
 				p.DependedOnByCount++
+				packages[p.FullName] = p
 			}
 		}
 	}
+	fmt.Printf("%+v", packages)
 	return packages, nil
 }
