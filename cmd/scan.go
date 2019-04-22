@@ -19,5 +19,9 @@ func init() {
 }
 
 func scan(cmd *cobra.Command, args[] string) error {
-	return pkg.Scan()
+	packages, err := pkg.Scan()
+	if err != nil {
+		return nil
+	}
+	return pkg.Analyse(packages)
 }

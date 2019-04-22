@@ -2,15 +2,22 @@ package pkg
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os/exec"
 	"path/filepath"
 )
 
-func Scan() error {
+type Package struct {
+	Name string
+	FullName string
+	Imports []string
+	ImportCount int
+	DependedOnByCount int
+}
+
+func Scan() (map[string]Package, error) {
+	packages := make(map[string]Package)
 	// Format: [packageName] = {outSide import count}
-	packages := make(map[string]int)
 	c := "go"
 	args := []string{
 		"list",
@@ -21,14 +28,14 @@ func Scan() error {
 	cmd := exec.Command(c, args...)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return err
+		return packages, err
 	}
 	if err := cmd.Start(); err != nil {
-		return err
+		return packages, err
 	}
 	b, err := ioutil.ReadAll(stdout)
 	if err != nil {
-		return err
+		return packages, err
 	}
 	lines := bytes.Split(b, []byte("\n"))
 	for _, line := range lines {
@@ -36,16 +43,32 @@ func Scan() error {
 		if len(split) < 2 {
 			continue
 		}
-		pkg := filepath.Base(string(split[0]))
+
+		pkg := split[0]
 		imports := split[1]
 		is := bytes.Split(imports, []byte(","))
-		packages[pkg] = 0
+		p := Package{
+			Name: filepath.Base(string(pkg)),
+			Imports: make([]string, 0),
+			ImportCount: 0,
+			DependedOnByCount: 0,
+		}
 		for _, i := range is {
 			if bytes.Contains(i, []byte(".")) {
-				packages[pkg]++
+				p.Imports = append(p.Imports, string(i))
+				p.ImportCount++
+			}
+		}
+		packages[string(pkg)] = p
+	}
+	for k, v := range packages {
+		imports := v.Imports
+		for _, i := range imports {
+			if _, ok := packages[i]; ok {
+				v.DependedOnByCount++
+				packages[k] = v
 			}
 		}
 	}
-	fmt.Println(packages)
-	return nil
+	return packages, nil
 }
