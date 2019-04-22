@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/Skarlso/effrit/cmd"
 	"log"
+
+	"github.com/Skarlso/effrit/cmd"
 )
 
-func main()  {
+func main() {
 	if err := cmd.RootCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}

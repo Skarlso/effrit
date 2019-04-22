@@ -2,20 +2,26 @@ package pkg
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os/exec"
 	"path/filepath"
 )
 
+// Package is a single package as determined by go list.
 type Package struct {
-	Name string
-	FullName string
-	Imports []string
-	ImportCount int
+	Name              string
+	FullName          string
+	Imports           []string
+	ImportCount       int
 	DependedOnByCount int
+	// For stability, 0.0 is a vaild value. Hence we need a value
+	// where stability has not yet been calculated for a given
+	// package.
+	Stability *float64
 }
 
+// Scan will scan a project using go list. As go list is running
+// in the background, scan will display a waiting indicator.
 func Scan() (map[string]Package, error) {
 	packages := make(map[string]Package)
 	// Format: [packageName] = {outSide import count}
@@ -49,11 +55,12 @@ func Scan() (map[string]Package, error) {
 		imports := split[1]
 		is := bytes.Split(imports, []byte(","))
 		p := Package{
-			Name: filepath.Base(string(pkg)),
-			Imports: make([]string, 0),
-			ImportCount: 0,
+			Name:              filepath.Base(string(pkg)),
+			Imports:           make([]string, 0),
+			ImportCount:       0,
 			DependedOnByCount: 0,
-			FullName: string(pkg),
+			FullName:          string(pkg),
+			Stability:         nil,
 		}
 		for _, i := range is {
 			if bytes.Contains(i, []byte(".")) {
@@ -72,6 +79,5 @@ func Scan() (map[string]Package, error) {
 			}
 		}
 	}
-	fmt.Printf("%+v", packages)
 	return packages, nil
 }
