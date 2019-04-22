@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/Skarlso/effrit/pkg"
 	"github.com/spf13/cobra"
 )
@@ -21,7 +23,9 @@ func init() {
 func scan(cmd *cobra.Command, args []string) error {
 	packages, err := pkg.Scan()
 	if err != nil {
-		return nil
+		return err
 	}
-	return pkg.Analyse(packages)
+	packages = pkg.Analyse(packages)
+	fmt.Printf("%+v", packages)
+	return nil
 }
