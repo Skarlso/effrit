@@ -30,7 +30,7 @@ func Display(packages map[string]Package) {
 			c = red
 		}
 		stability := fmt.Sprintf("%.1f", p.Stability)
-		writeColumns(table, []string{p.Name, c.Sprint(stability)})
+		writeColumns(table, []string{p.FullName, c.Sprint(stability)})
 	}
 	table.Flush()
 }
