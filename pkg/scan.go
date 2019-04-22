@@ -1,81 +1,51 @@
 package pkg
 
 import (
+	"bytes"
 	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/token"
 	"io/ioutil"
-	"log"
-	"os"
+	"os/exec"
 	"path/filepath"
-
-	"github.com/schollz/progressbar/v2"
 )
 
-func Scan(ignoreList []string) error {
-	goFiles := make(map[string]string, 0)
-	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			if contains(ignoreList, info.Name()) {
-				return filepath.SkipDir
-			}
-		} else {
-			if filepath.Ext(info.Name()) == ".go" {
-				goFiles[path] = info.Name()
-			}
-		}
-
-		return nil
-	})
+func Scan() error {
+	// Format: [packageName] = {outSide import count}
+	packages := make(map[string]int)
+	c := "go"
+	args := []string{
+		"list",
+		"-f",
+		"{{.ImportPath}} {{join .Imports \",\"}}",
+		"./...",
+	}
+	cmd := exec.Command(c, args...)
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
 	}
-
-	log.Println("Scanning total number of go files: ", len(goFiles))
-	total := len(goFiles)
-	bar := progressbar.New(total)
-	//listOfPackages := make([]string, 0)
-	for path, file := range goFiles {
-		src, err := ioutil.ReadFile(path)
-		if err != nil {
-			return err
-		}
-		fset := token.NewFileSet()
-		f, err := parser.ParseFile(fset, file, src, parser.PackageClauseOnly)
-		if err != nil {
-			return err
-		}
-		ast.Print(fset, f)
-		ast.Inspect(f, func(n ast.Node) bool{
-			var s string
-			switch x := n.(type) {
-			case *ast.Ident:
-				s = x.Name
-			}
-			if s != "" {
-				fmt.Println("Name: ", s)
-				//fmt.Printf("%s:\t%s\n", fset.Position(n.Pos()), s)
-			}
-			return true
-		})
-		//for _, i := range f.Imports {
-		//	fmt.Println(i.Path.Value)
-		//}
-		_ = bar.Add(1)
+	if err := cmd.Start(); err != nil {
+		return err
 	}
-	_ = bar.Finish()
+	b, err := ioutil.ReadAll(stdout)
+	if err != nil {
+		return err
+	}
+	lines := bytes.Split(b, []byte("\n"))
+	for _, line := range lines {
+		split := bytes.Split(line, []byte(" "))
+		if len(split) < 2 {
+			continue
+		}
+		pkg := filepath.Base(string(split[0]))
+		imports := split[1]
+		is := bytes.Split(imports, []byte(","))
+		packages[pkg] = 0
+		for _, i := range is {
+			if bytes.Contains(i, []byte(".")) {
+				packages[pkg]++
+			}
+		}
+	}
+	fmt.Println(packages)
 	return nil
-}
-
-func contains(list []string, item string) bool {
-	for _, i := range list {
-		if i == item {
-			return true
-		}
-	}
-	return false
 }
