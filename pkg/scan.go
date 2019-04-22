@@ -15,8 +15,8 @@ type Package struct {
 	DependedOnByCount int
 }
 
-func Scan() (map[string]Package, error) {
-	packages := make(map[string]Package)
+func Scan() (map[string]*Package, error) {
+	packages := make(map[string]*Package)
 	// Format: [packageName] = {outSide import count}
 	c := "go"
 	args := []string{
@@ -47,11 +47,12 @@ func Scan() (map[string]Package, error) {
 		pkg := split[0]
 		imports := split[1]
 		is := bytes.Split(imports, []byte(","))
-		p := Package{
+		p := &Package{
 			Name: filepath.Base(string(pkg)),
 			Imports: make([]string, 0),
 			ImportCount: 0,
 			DependedOnByCount: 0,
+			FullName: string(pkg),
 		}
 		for _, i := range is {
 			if bytes.Contains(i, []byte(".")) {
@@ -59,14 +60,13 @@ func Scan() (map[string]Package, error) {
 				p.ImportCount++
 			}
 		}
-		packages[string(pkg)] = p
+		packages[p.FullName] = p
 	}
-	for k, v := range packages {
+	for _, v := range packages {
 		imports := v.Imports
 		for _, i := range imports {
-			if _, ok := packages[i]; ok {
-				v.DependedOnByCount++
-				packages[k] = v
+			if p, ok := packages[i]; ok {
+				p.DependedOnByCount++
 			}
 		}
 	}
