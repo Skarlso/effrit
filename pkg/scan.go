@@ -29,6 +29,7 @@ func Scan(projectName string) (map[string]Package, error) {
 		"{{.ImportPath}} {{join .Imports \",\"}}",
 		"./...",
 	}
+	/* #nosec */
 	cmd := exec.Command(c, args...)
 	fmt.Println("Waiting for go list to finish scanning the project...")
 	b, err := cmd.Output()
@@ -55,13 +56,7 @@ func Scan(projectName string) (map[string]Package, error) {
 		}
 		for _, i := range is {
 			if bytes.Contains(i, []byte(".")) {
-				if len(projectName) > 0 {
-					if bytes.Contains(i, []byte(projectName)) {
-						// If a project name is defined, we will
-						// only count imports which are in this project.
-						p.Imports = append(p.Imports, string(i))
-						p.ImportCount++
-					}
+				if len(projectName) > 0 && !bytes.Contains(i, []byte(projectName)) {
 					continue
 				}
 				p.Imports = append(p.Imports, string(i))
@@ -70,6 +65,11 @@ func Scan(projectName string) (map[string]Package, error) {
 		}
 		packages[p.FullName] = p
 	}
+	packages = gatherDependedOnByCount(packages)
+	return packages, nil
+}
+
+func gatherDependedOnByCount(packages map[string]Package) map[string]Package {
 	for _, v := range packages {
 		imports := v.Imports
 		for _, i := range imports {
@@ -79,5 +79,5 @@ func Scan(projectName string) (map[string]Package, error) {
 			}
 		}
 	}
-	return packages, nil
+	return packages
 }

@@ -14,7 +14,7 @@ var yellow = color.New(color.FgYellow)
 var red = color.New(color.FgRed)
 var green = color.New(color.FgGreen, color.Bold)
 
-// Display displays the analyies information in a pretty way...
+// Display displays the analysed information in a pretty way...
 // TODO: Add multiple display options and Graph generation.
 func Display(packages map[string]Package) {
 	const padding = 3
@@ -32,9 +32,9 @@ func Display(packages map[string]Package) {
 		stability := fmt.Sprintf("%.1f", p.Stability)
 		writeColumns(table, []string{p.FullName, c.Sprint(stability)})
 	}
-	table.Flush()
+	_ = table.Flush()
 }
 
 func writeColumns(w io.Writer, cols []string) {
-	fmt.Fprintln(w, strings.Join(cols, "\t"))
+	_, _ = fmt.Fprintln(w, strings.Join(cols, "\t"))
 }
