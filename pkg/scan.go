@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 // Package is a single package as determined by go list.
@@ -15,6 +16,8 @@ type Package struct {
 	ImportCount       float64
 	DependedOnByCount float64
 	Stability         float64
+	Dir               string
+	GoFiles           []string
 }
 
 // Scan will scan a project using go list. As go list is running
@@ -26,7 +29,7 @@ func Scan(projectName string) (map[string]Package, error) {
 	args := []string{
 		"list",
 		"-f",
-		"{{.ImportPath}} {{join .Imports \",\"}}",
+		"{{.ImportPath}} {{join .Imports \",\"}} {{join .GoFiles \",\"}} {{.Dir}}",
 		"./...",
 	}
 	/* #nosec */
@@ -45,6 +48,11 @@ func Scan(projectName string) (map[string]Package, error) {
 
 		pkg := split[0]
 		imports := split[1]
+		goFiles := string(split[2])
+		dir := split[3]
+
+		gf := strings.Split(goFiles, ",")
+
 		is := bytes.Split(imports, []byte(","))
 		p := Package{
 			Name:              filepath.Base(string(pkg)),
@@ -53,6 +61,8 @@ func Scan(projectName string) (map[string]Package, error) {
 			DependedOnByCount: 0,
 			FullName:          string(pkg),
 			Stability:         0.0,
+			GoFiles:           gf,
+			Dir:               string(dir),
 		}
 		for _, i := range is {
 			if bytes.Contains(i, []byte(".")) {
