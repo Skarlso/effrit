@@ -2,8 +2,13 @@ package pkg
 
 import (
 	"fmt"
+	"go/parser"
+	"go/token"
 	"io"
+	"io/ioutil"
+	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/tabwriter"
 
@@ -48,10 +53,20 @@ func (pkg *Packages) gatherDependedOnByCount() {
 	}
 }
 
-func (pkg *Packages) parseGoFiles() {
+// ParseGoFiles will walk all the files in the package
+// and analyies abstractness.
+func (pkg *Packages) ParseGoFiles() {
 	for _, p := range pkg.packageMap {
 		for _, f := range p.GoFiles {
-			fmt.Println("Parsing: ", f)
+			fset := token.NewFileSet()
+			data, err := ioutil.ReadFile(filepath.Join(p.Dir, f))
+			if err != nil {
+				log.Fatal(err)
+			}
+			node, err := parser.ParseFile(fset, f, data, 0)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
 }
