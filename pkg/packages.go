@@ -2,17 +2,16 @@ package pkg
 
 import (
 	"fmt"
+	"go/ast"
 	"go/parser"
 	"go/token"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
-	"text/tabwriter"
 
 	"github.com/fatih/color"
+	"github.com/olekukonko/tablewriter"
 )
 
 // Package is a single package as determined by go list.
@@ -53,12 +52,15 @@ func (pkg *Packages) gatherDependedOnByCount() {
 	}
 }
 
-// ParseGoFiles will walk all the files in the package
+// CalculateAbstractnessOfPackages will walk all the files in the package
 // and analyies abstractness.
-func (pkg *Packages) ParseGoFiles() {
-	for _, p := range pkg.packageMap {
+func (pkg *Packages) CalculateAbstractnessOfPackages() {
+	for k, p := range pkg.packageMap {
+		funcCount := 0.0
+		interfaceCount := 0.0
 		for _, f := range p.GoFiles {
 			fset := token.NewFileSet()
+			/* #nosec */
 			data, err := ioutil.ReadFile(filepath.Join(p.Dir, f))
 			if err != nil {
 				log.Fatal(err)
@@ -67,8 +69,20 @@ func (pkg *Packages) ParseGoFiles() {
 			if err != nil {
 				log.Fatal(err)
 			}
-		}
-	}
+			ast.Inspect(node, func(n ast.Node) bool {
+				// TODO: This needs structs with no receivers counted as interface.
+				switch n.(type) {
+				case *ast.FuncDecl:
+					funcCount++
+				case *ast.InterfaceType:
+					interfaceCount++
+				}
+				return true
+			})
+		} // go files in packages
+		p.Abstractness = interfaceCount / funcCount
+		pkg.packageMap[k] = p
+	} // packages
 }
 
 var yellow = color.New(color.FgYellow)
@@ -78,9 +92,8 @@ var green = color.New(color.FgGreen, color.Bold)
 // Display displays the analysed information in a pretty way...
 // TODO: Add multiple display options and Graph generation.
 func (pkg *Packages) Display() {
-	const padding = 3
-	table := tabwriter.NewWriter(os.Stdout, 0, 0, padding, ' ', 0)
-	writeColumns(table, []string{"NAME", "STABILITY"})
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"NAME", "STABILITY", "ABSTRACTNESS"})
 	for _, p := range pkg.packageMap {
 		c := &color.Color{}
 		if p.Stability < 0.5 {
@@ -91,11 +104,8 @@ func (pkg *Packages) Display() {
 			c = red
 		}
 		stability := fmt.Sprintf("%.1f", p.Stability)
-		writeColumns(table, []string{p.FullName, c.Sprint(stability)})
+		abstractness := fmt.Sprintf("%.1f", p.Abstractness)
+		table.Append([]string{p.FullName, c.Sprint(stability), abstractness})
 	}
-	_ = table.Flush()
-}
-
-func writeColumns(w io.Writer, cols []string) {
-	_, _ = fmt.Fprintln(w, strings.Join(cols, "\t"))
+	table.Render()
 }
