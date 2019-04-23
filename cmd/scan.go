@@ -29,6 +29,6 @@ func scan(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	packages = pkg.Analyse(packages)
-	pkg.Display(packages)
+	packages.Display()
 	return nil
 }
