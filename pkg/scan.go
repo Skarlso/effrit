@@ -8,22 +8,10 @@ import (
 	"strings"
 )
 
-// Package is a single package as determined by go list.
-type Package struct {
-	Name              string
-	FullName          string
-	Imports           []string
-	ImportCount       float64
-	DependedOnByCount float64
-	Stability         float64
-	Dir               string
-	GoFiles           []string
-}
-
 // Scan will scan a project using go list. As go list is running
 // in the background, scan will display a waiting indicator.
-func Scan(projectName string) (map[string]Package, error) {
-	packages := make(map[string]Package)
+func Scan(projectName string) (*Packages, error) {
+	pkgs := NewPackages()
 	// Format: [packageName] = {outSide import count}
 	c := "go"
 	args := []string{
@@ -37,7 +25,7 @@ func Scan(projectName string) (map[string]Package, error) {
 	fmt.Println("Waiting for go list to finish scanning the project...")
 	b, err := cmd.Output()
 	if err != nil {
-		return packages, err
+		return pkgs, err
 	}
 	lines := bytes.Split(b, []byte("\n"))
 	for _, line := range lines {
@@ -50,7 +38,6 @@ func Scan(projectName string) (map[string]Package, error) {
 		imports := split[1]
 		goFiles := string(split[2])
 		dir := split[3]
-
 		gf := strings.Split(goFiles, ",")
 
 		is := bytes.Split(imports, []byte(","))
@@ -73,21 +60,7 @@ func Scan(projectName string) (map[string]Package, error) {
 				p.ImportCount++
 			}
 		}
-		packages[p.FullName] = p
+		pkgs.packageMap[p.FullName] = p
 	}
-	packages = gatherDependedOnByCount(packages)
-	return packages, nil
-}
-
-func gatherDependedOnByCount(packages map[string]Package) map[string]Package {
-	for _, v := range packages {
-		imports := v.Imports
-		for _, i := range imports {
-			if p, ok := packages[i]; ok {
-				p.DependedOnByCount++
-				packages[p.FullName] = p
-			}
-		}
-	}
-	return packages
+	return pkgs, nil
 }
