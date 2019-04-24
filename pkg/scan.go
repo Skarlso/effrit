@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -61,6 +62,8 @@ func Scan(projectName string) (*Packages, error) {
 			}
 		}
 		pkgs.packageMap[p.FullName] = p
+		pkgs.packageNames = append(pkgs.packageNames, p.FullName)
 	}
+	sort.Strings(pkgs.packageNames)
 	return pkgs, nil
 }

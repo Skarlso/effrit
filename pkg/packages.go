@@ -30,13 +30,15 @@ type Package struct {
 
 // Packages represents a collection of packages.
 type Packages struct {
-	packageMap map[string]Package
+	packageMap   map[string]Package
+	packageNames []string
 }
 
 // NewPackages returns a new initialized package collection.
 func NewPackages() *Packages {
 	return &Packages{
-		packageMap: make(map[string]Package),
+		packageMap:   make(map[string]Package),
+		packageNames: make([]string, 0),
 	}
 }
 
@@ -130,7 +132,8 @@ var green = color.New(color.FgGreen, color.Bold)
 func (pkg *Packages) Display() {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"NAME", "STABILITY", "ABSTRACTNESS", "DISTANCE"})
-	for _, p := range pkg.packageMap {
+	for _, pname := range pkg.packageNames {
+		p := pkg.packageMap[pname]
 		c := &color.Color{}
 		if p.Stability < 0.5 {
 			c = green
