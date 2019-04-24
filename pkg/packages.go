@@ -76,6 +76,11 @@ func (pkg *Packages) CalculateAbstractnessOfPackages() {
 					funcCount++
 				case *ast.InterfaceType:
 					interfaceCount++
+				case *ast.StructType:
+					// This right now calculates structs towards abstractness.
+					// I have no easy way to find receivers for structs yet
+					// so I'm counting all structs towards interfaces.
+					interfaceCount++
 				}
 				return true
 			})
