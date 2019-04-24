@@ -62,6 +62,5 @@ func Scan(projectName string) (*Packages, error) {
 		}
 		pkgs.packageMap[p.FullName] = p
 	}
-	pkgs.gatherDependedOnByCount()
 	return pkgs, nil
 }
