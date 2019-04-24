@@ -11,8 +11,8 @@ import (
 
 // Scan will scan a project using go list. As go list is running
 // in the background, scan will display a waiting indicator.
-func Scan(projectName string) (*Packages, error) {
-	pkgs := NewPackages()
+func Scan(projectName string, parallel int) (*Packages, error) {
+	pkgs := NewPackages(parallel)
 	// Format: [packageName] = {outSide import count}
 	c := "go"
 	args := []string{

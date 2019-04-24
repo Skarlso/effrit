@@ -6,9 +6,9 @@ import (
 	"go/parser"
 	"go/token"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
@@ -32,13 +32,15 @@ type Package struct {
 type Packages struct {
 	packageMap   map[string]Package
 	packageNames []string
+	semaphore    int
 }
 
 // NewPackages returns a new initialized package collection.
-func NewPackages() *Packages {
+func NewPackages(parallel int) *Packages {
 	return &Packages{
 		packageMap:   make(map[string]Package),
 		packageNames: make([]string, 0),
+		semaphore:    parallel,
 	}
 }
 
@@ -86,37 +88,70 @@ func abs(a float64) float64 {
 // and analyses abstractness.
 func (pkg *Packages) CalculateAbstractnessOfPackages() {
 	for k, p := range pkg.packageMap {
+		var wg sync.WaitGroup
 		funcCount := 0.0
 		abstractsCount := 0.0
 		fmt.Printf("Scanning %s go file(s) in package %s.\n", keyName.Sprint(len(p.GoFiles)), keyName.Sprint(p.FullName))
+		sem := make(chan int, pkg.semaphore)
+		errChan := make(chan error, len(p.GoFiles))
 		for _, f := range p.GoFiles {
-			fset := token.NewFileSet()
-			/* #nosec */
-			data, err := ioutil.ReadFile(filepath.Join(p.Dir, f))
-			if err != nil {
-				log.Fatal(err)
-			}
-			node, err := parser.ParseFile(fset, f, data, 0)
-			if err != nil {
-				log.Fatal(err)
-			}
-			ast.Inspect(node, func(n ast.Node) bool {
-				// TODO: This needs structs with no receivers counted as interface.
-				switch n.(type) {
-				case *ast.FuncDecl:
-					funcCount++
-				case *ast.InterfaceType:
-					abstractsCount++
-				case *ast.StructType:
-					// This right now calculates structs towards abstractness.
-					// I have no easy way to find receivers for structs yet
-					// so I'm counting all structs towards interfaces. If there are
-					// implementations in these packages they would even out this count.
-					abstractsCount++
+			wg.Add(1)
+			go func(dir, fh string) {
+				defer wg.Done()
+				sem <- 1
+				fset := token.NewFileSet()
+				/* #nosec */
+				data, err := ioutil.ReadFile(filepath.Join(dir, fh))
+				if err != nil {
+					errChan <- err
+					<-sem
+					return
 				}
-				return true
-			})
+				node, err := parser.ParseFile(fset, fh, data, 0)
+				if err != nil {
+					errChan <- err
+					<-sem
+					return
+				}
+				ast.Inspect(node, func(n ast.Node) bool {
+					switch n.(type) {
+					case *ast.FuncDecl:
+						funcCount++
+					case *ast.InterfaceType:
+						abstractsCount++
+					case *ast.StructType:
+						// This right now calculates structs towards abstractness.
+						// I have no easy way to find receivers for structs yet
+						// so I'm counting all structs towards interfaces. If there are
+						// implementations in these packages they would even out this count.
+						abstractsCount++
+					}
+					return true
+				})
+				<-sem
+			}(p.Dir, f)
 		} // go files in packages
+		wg.Wait()
+
+		errorList := make([]error, 0)
+	drainLoop:
+		for {
+			select {
+			case err := <-errChan:
+				errorList = append(errorList, err)
+			default:
+				break drainLoop
+			}
+		}
+		if len(errorList) > 0 {
+			fmt.Printf("%d error(s) processing pkg %s\n", len(errorList), p.FullName)
+			fmt.Println("listing error(s):")
+			for _, e := range errorList {
+				fmt.Println(e)
+			}
+			fmt.Println("Please fix these before continuing.")
+			os.Exit(1)
+		}
 		p.Abstractness = abstractsCount / funcCount
 		pkg.packageMap[k] = p
 	} // packages

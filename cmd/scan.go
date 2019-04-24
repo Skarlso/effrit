@@ -15,16 +15,18 @@ they are in. It will gather all defined packages.
 }
 
 var scanCmdOptions struct {
-	projectName string
+	projectName   string
+	parallelFiles int
 }
 
 func init() {
 	scanCmd.Flags().StringVarP(&scanCmdOptions.projectName, "project-name", "p", "", "Define the name of the project.")
+	scanCmd.Flags().IntVarP(&scanCmdOptions.parallelFiles, "parallel-files", "n", 5, "Define the maximum number of files processed in parallel. ")
 	RootCmd.AddCommand(scanCmd)
 }
 
 func scan(cmd *cobra.Command, args []string) error {
-	packages, err := pkg.Scan(scanCmdOptions.projectName)
+	packages, err := pkg.Scan(scanCmdOptions.projectName, scanCmdOptions.parallelFiles)
 	if err != nil {
 		return err
 	}
