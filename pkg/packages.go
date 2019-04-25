@@ -101,6 +101,9 @@ func (pkg *Packages) CalculateAbstractnessOfPackages() {
 			go parseGoFile(f, p.Dir, funcChan, absChan, sem, errChan, &wg)
 		} // go files in packages
 		wg.Wait()
+		// Need to close the channels here to be able to for on them.
+		close(funcChan)
+		close(absChan)
 
 		errorList := make([]error, 0)
 	drainLoop:
@@ -121,25 +124,12 @@ func (pkg *Packages) CalculateAbstractnessOfPackages() {
 			fmt.Println("Please fix these before continuing.")
 			os.Exit(1)
 		}
-	drainAbsChan:
-		for {
-			select {
-			case a := <-absChan:
-				abstractsCount += a
-			default:
-				break drainAbsChan
-			}
+		for a := range absChan {
+			abstractsCount += a
 		}
-	drainFuncChan:
-		for {
-			select {
-			case a := <-funcChan:
-				funcCount += a
-			default:
-				break drainFuncChan
-			}
+		for a := range funcChan {
+			funcCount += a
 		}
-
 		p.Abstractness = abstractsCount / funcCount
 		pkg.packageMap[k] = p
 	} // packages
