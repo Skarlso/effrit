@@ -104,16 +104,11 @@ func (pkg *Packages) CalculateAbstractnessOfPackages() {
 		// Need to close the channels here to be able to for on them.
 		close(funcChan)
 		close(absChan)
+		close(errChan)
 
 		errorList := make([]error, 0)
-	drainLoop:
-		for {
-			select {
-			case err := <-errChan:
-				errorList = append(errorList, err)
-			default:
-				break drainLoop
-			}
+		for e := range errChan {
+			errorList = append(errorList, e)
 		}
 		if len(errorList) > 0 {
 			fmt.Printf("%d error(s) processing pkg %s\n", len(errorList), p.FullName)
