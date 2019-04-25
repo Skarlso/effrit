@@ -101,6 +101,10 @@ func (pkg *Packages) CalculateAbstractnessOfPackages() {
 				sem <- 1
 				fset := token.NewFileSet()
 				/* #nosec */
+				if len(fh) < 1 {
+					fmt.Println("skipping folder... file is empty:", dir)
+					return
+				}
 				data, err := ioutil.ReadFile(filepath.Join(dir, fh))
 				if err != nil {
 					errChan <- err
