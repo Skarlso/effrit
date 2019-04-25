@@ -146,6 +146,10 @@ func parseGoFile(fh, dir string,
 	funcCount := 0.0
 	abstractsCount := 0.0
 	fset := token.NewFileSet()
+	if len(fh) < 1 {
+		fmt.Println("skipping folder... file is empty:", dir)
+		return
+	}
 	/* #nosec */
 	data, err := ioutil.ReadFile(filepath.Join(dir, fh))
 	if err != nil {
