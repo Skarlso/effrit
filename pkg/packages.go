@@ -11,7 +11,8 @@ import (
 	"sync"
 
 	"github.com/fatih/color"
-	"github.com/olekukonko/tablewriter"
+	"github.com/rivo/tview"
+	// "github.com/olekukonko/tablewriter"
 )
 
 // Package is a single package as determined by go list.
@@ -186,22 +187,51 @@ var green = color.New(color.FgGreen, color.Bold)
 // Display displays the analysed information in a pretty way...
 // TODO: Add multiple display options and Graph generation.
 func (pkg *Packages) Display() {
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"NAME", "STABILITY", "ABSTRACTNESS", "DISTANCE"})
-	for _, pname := range pkg.packageNames {
-		p := pkg.packageMap[pname]
-		c := &color.Color{}
-		if p.Stability < 0.5 {
-			c = green
-		} else if p.Stability >= 0.5 && p.Stability < 1 {
-			c = yellow
-		} else if p.Stability == 1 {
-			c = red
-		}
-		stability := fmt.Sprintf("%.1f", p.Stability)
-		abstractness := fmt.Sprintf("%.1f", p.Abstractness)
-		distance := fmt.Sprintf("%.1f", p.DistanceFromMedian)
-		table.Append([]string{p.FullName, c.Sprint(stability), keyName.Sprint(abstractness), keyName.Sprint(distance)})
+	// table := tablewriter.NewWriter(os.Stdout)
+	// table.SetHeader([]string{"NAME", "STABILITY", "ABSTRACTNESS", "DISTANCE"})
+	// for _, pname := range pkg.packageNames {
+	// 	p := pkg.packageMap[pname]
+	// 	c := &color.Color{}
+	// 	if p.Stability < 0.5 {
+	// 		c = green
+	// 	} else if p.Stability >= 0.5 && p.Stability < 1 {
+	// 		c = yellow
+	// 	} else if p.Stability == 1 {
+	// 		c = red
+	// 	}
+	// 	stability := fmt.Sprintf("%.1f", p.Stability)
+	// 	abstractness := fmt.Sprintf("%.1f", p.Abstractness)
+	// 	distance := fmt.Sprintf("%.1f", p.DistanceFromMedian)
+	// 	table.Append([]string{p.FullName, c.Sprint(stability), keyName.Sprint(abstractness), keyName.Sprint(distance)})
+	// }
+	// table.Render()
+
+	// if err := ui.Init(); err != nil {
+	// 	log.Fatalf("failed to initialize termui: %v", err)
+	// }
+	// defer ui.Close()
+
+	// p := widgets.NewParagraph()
+	// p.Text = "Hello World!"
+	// p.SetRect(0, 0, 25, 5)
+
+	// ui.Render(p)
+
+	// for e := range ui.PollEvents() {
+	// 	if e.Type == ui.KeyboardEvent {
+	// 		break
+	// 	}
+	// }
+	app := tview.NewApplication()
+	list := tview.NewList().
+		AddItem("List item 1", "Some explanatory text", 'a', nil).
+		AddItem("List item 2", "Some explanatory text", 'b', nil).
+		AddItem("List item 3", "Some explanatory text", 'c', nil).
+		AddItem("List item 4", "Some explanatory text", 'd', nil).
+		AddItem("Quit", "Press to exit", 'q', func() {
+			app.Stop()
+		})
+	if err := app.SetRoot(list, true).SetFocus(list).Run(); err != nil {
+		panic(err)
 	}
-	table.Render()
 }
