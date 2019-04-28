@@ -1,11 +1,13 @@
 package pkg
 
 import (
+	"encoding/json"
 	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -21,6 +23,7 @@ type Package struct {
 	Imports            []string
 	ImportCount        float64
 	DependedOnByCount  float64
+	DependedOnByNames  []string
 	Stability          float64
 	Abstractness       float64
 	DistanceFromMedian float64
@@ -51,6 +54,10 @@ func (pkg *Packages) GatherDependedOnByCount() {
 		for _, i := range imports {
 			if p, ok := pkg.packageMap[i]; ok {
 				p.DependedOnByCount++
+				if len(p.DependedOnByNames) < 1 {
+					p.DependedOnByNames = make([]string, 0)
+				}
+				p.DependedOnByNames = append(p.DependedOnByNames, v.FullName)
 				pkg.packageMap[p.FullName] = p
 			}
 		}
@@ -204,4 +211,26 @@ func (pkg *Packages) Display() {
 		table.Append([]string{p.FullName, c.Sprint(stability), keyName.Sprint(abstractness), keyName.Sprint(distance)})
 	}
 	table.Render()
+}
+
+// Dump dumps the connections between packages in a JSON format
+// for other tools to process.
+func (pkg *Packages) Dump() {
+	pkgs := make([]Package, 0)
+	for _, p := range pkg.packageMap {
+		pkgs = append(pkgs, p)
+	}
+	var packages = struct {
+		Packages []Package `json:"packages"`
+	}{
+		Packages: pkgs,
+	}
+	data, err := json.Marshal(packages)
+	if err != nil {
+		log.Fatal("error marshaling to json: ", err)
+	}
+	err = ioutil.WriteFile("package_data.json", data, 0666)
+	if err != nil {
+		log.Fatal("error while writing json file: ", err)
+	}
 }

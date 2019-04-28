@@ -35,5 +35,6 @@ func scan(cmd *cobra.Command, args []string) error {
 	packages.CalculateAbstractnessOfPackages()
 	packages.CalculateDistance()
 	packages.Display()
+	packages.Dump()
 	return nil
 }
