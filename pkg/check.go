@@ -59,6 +59,8 @@ func Check(projectName string, parallel int) error {
 	// Compare the new result with the old result's map data.
 	for _, p := range packages.Packages {
 		dependents := packageMap[p.FullName]
+		sort.Strings(dependents)
+		sort.Strings(p.DependedOnByNames)
 		if !reflect.DeepEqual(dependents, p.DependedOnByNames) {
 			fmt.Println("A new dependency has been added to package: ", p.FullName)
 			owner, err := getOwnerForFile(p.Dir, p.GoFiles)
