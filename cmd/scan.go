@@ -1,3 +1,4 @@
+// @package_author = @skarlso
 package cmd
 
 import (

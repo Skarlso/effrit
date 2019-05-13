@@ -1,20 +1,23 @@
 // Some comment
-// @package_author = Gergely Brautigam
+// @package_author = @skarlso
 package pkg
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
+	"strings"
 )
 
 const (
 	EffritFileName = ".effrit_package_data.json"
-	CommentSection = "@package_author = %s"
+	CommentTag     = "@package_author"
 )
 
 func Check(projectName string, parallel int) error {
@@ -49,18 +52,43 @@ func Check(projectName string, parallel int) error {
 	if err != nil {
 		return err
 	}
-
+	packages.Packages = make([]Package, 0)
 	data, _ = ioutil.ReadFile(EffritFileName)
 	_ = json.Unmarshal(data, &packages)
 
 	// Compare the new result with the old result's map data.
 	for _, p := range packages.Packages {
-		dependents := packageMap[p.Name]
-		sort.Strings(dependents)
-		sort.Strings(p.DependedOnByNames)
+		dependents := packageMap[p.FullName]
 		if !reflect.DeepEqual(dependents, p.DependedOnByNames) {
-			fmt.Println("A new dependency has been added to package: ", p.Name)
+			fmt.Println("A new dependency has been added to package: ", p.FullName)
+			owner, err := getOwnerForFile(p.Dir, p.GoFiles)
+			if err != nil {
+				return err
+			}
+			fmt.Println("Contacting owner: ", owner)
 		}
 	}
 	return nil
+}
+
+func getOwnerForFile(dir string, files []string) (string, error) {
+	// we check until we find an owner tag for this package.
+	for _, f := range files {
+		file, err := os.Open(filepath.Join(dir, f))
+		if err != nil {
+			return "", err
+		}
+		fs := bufio.NewScanner(file)
+		for fs.Scan() {
+			line := fs.Text()
+			if strings.Contains(line, CommentTag) {
+				var owner string
+				_, _ = fmt.Sscanf(line, "// @package_author = %s", &owner)
+				_ = file.Close()
+				return owner, nil
+			}
+		}
+		_ = file.Close()
+	}
+	return "", nil
 }

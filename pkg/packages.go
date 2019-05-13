@@ -144,7 +144,8 @@ func parseGoFile(fh, dir string,
 	wg *sync.WaitGroup) {
 
 	defer wg.Done()
-	defer func() { sem <- 1 }()
+	sem <- 1
+	defer func() { <-sem }()
 	funcCount := 0.0
 	abstractsCount := 0.0
 	fset := token.NewFileSet()
