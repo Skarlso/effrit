@@ -10,6 +10,7 @@ import (
 
 const (
 	EffritFileName = ".effrit_package_data.json"
+	CommentSection = "@user=%s"
 )
 
 func Check() error {
