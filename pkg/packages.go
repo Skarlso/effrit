@@ -144,7 +144,7 @@ func parseGoFile(fh, dir string,
 	wg *sync.WaitGroup) {
 
 	defer wg.Done()
-	sem <- 1
+	defer func() { sem <- 1 }()
 	funcCount := 0.0
 	abstractsCount := 0.0
 	fset := token.NewFileSet()
@@ -156,13 +156,11 @@ func parseGoFile(fh, dir string,
 	data, err := ioutil.ReadFile(filepath.Join(dir, fh))
 	if err != nil {
 		errChan <- err
-		<-sem
 		return
 	}
 	node, err := parser.ParseFile(fset, fh, data, 0)
 	if err != nil {
 		errChan <- err
-		<-sem
 		return
 	}
 	ast.Inspect(node, func(n ast.Node) bool {
@@ -182,7 +180,6 @@ func parseGoFile(fh, dir string,
 	})
 	funcChan <- funcCount
 	absChan <- abstractsCount
-	<-sem
 }
 
 var keyName = color.New(color.FgWhite, color.Bold)
@@ -229,7 +226,7 @@ func (pkg *Packages) Dump() {
 	if err != nil {
 		log.Fatal("error marshaling to json: ", err)
 	}
-	err = ioutil.WriteFile("package_data.json", data, 0666)
+	err = ioutil.WriteFile(".effrit_package_data.json", data, 0666)
 	if err != nil {
 		log.Fatal("error while writing json file: ", err)
 	}

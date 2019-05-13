@@ -11,7 +11,7 @@ import (
 
 // Scan will scan a project using go list. As go list is running
 // in the background, scan will display a waiting indicator.
-func Scan(projectName string, parallel int) (*Packages, error) {
+func Scan(projectName string, parallel int) error {
 	pkgs := NewPackages(parallel)
 	// Format: [packageName] = {outSide import count}
 	c := "go"
@@ -26,7 +26,7 @@ func Scan(projectName string, parallel int) (*Packages, error) {
 	fmt.Println("Waiting for go list to finish scanning the project...")
 	b, err := cmd.Output()
 	if err != nil {
-		return pkgs, err
+		return err
 	}
 	lines := bytes.Split(b, []byte("\n"))
 	for _, line := range lines {
@@ -65,5 +65,11 @@ func Scan(projectName string, parallel int) (*Packages, error) {
 		pkgs.packageNames = append(pkgs.packageNames, p.FullName)
 	}
 	sort.Strings(pkgs.packageNames)
-	return pkgs, nil
+	pkgs.GatherDependedOnByCount()
+	pkgs.CalculateInstability()
+	pkgs.CalculateAbstractnessOfPackages()
+	pkgs.CalculateDistance()
+	pkgs.Display()
+	pkgs.Dump()
+	return nil
 }

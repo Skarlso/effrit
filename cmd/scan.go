@@ -26,15 +26,5 @@ func init() {
 }
 
 func scan(cmd *cobra.Command, args []string) error {
-	packages, err := pkg.Scan(scanCmdOptions.projectName, scanCmdOptions.parallelFiles)
-	if err != nil {
-		return err
-	}
-	packages.GatherDependedOnByCount()
-	packages.CalculateInstability()
-	packages.CalculateAbstractnessOfPackages()
-	packages.CalculateDistance()
-	packages.Display()
-	packages.Dump()
-	return nil
+	return pkg.Scan(scanCmdOptions.projectName, scanCmdOptions.parallelFiles)
 }

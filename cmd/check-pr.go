@@ -26,5 +26,5 @@ func init() {
 }
 
 func check(cmd *cobra.Command, args []string) error {
-	return pkg.Check()
+	return pkg.Check(checkCmdOptions.projectName, checkCmdOptions.parallelFiles)
 }
