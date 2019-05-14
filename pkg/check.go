@@ -81,6 +81,10 @@ func Check(projectName string, parallel int, owner, repo string, prNumber int) e
 			ownersToContact = append(ownersToContact, owner)
 		}
 	}
+	err = contactOwners(ownersToContact, owner, repo, prNumber)
+	if err != nil {
+		return err
+	}
 	if len(ownersToContact) > 0 {
 		return contactOwners(ownersToContact, owner, repo, prNumber)
 	}
@@ -123,9 +127,16 @@ func contactOwners(owners []string, owner, repo string, n int) error {
 
 	client := github.NewClient(tc)
 	com := "This is my comment"
+	path := "check.go"
+	position := 0
+	commitID := "80483064de6ea27454e6e7e4baea587ea0d4b0ea"
 	comment := github.PullRequestComment{
-		Body: &com,
+		Body:     &com,
+		Path:     &path,
+		Position: &position,
+		CommitID: &commitID,
 	}
+	fmt.Println(owner, repo, n)
 	_, _, err := client.PullRequests.CreateComment(ctx, owner, repo, n, &comment)
 	return err
 }
