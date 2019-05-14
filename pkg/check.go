@@ -127,7 +127,7 @@ func contactOwners(owners []string, owner, repo string, n int) error {
 
 	client := github.NewClient(tc)
 	com := "This is my comment"
-	path := "check.go"
+	path := "pkg/check.go"
 	position := 0
 	commitID := "80483064de6ea27454e6e7e4baea587ea0d4b0ea"
 	comment := github.PullRequestComment{
