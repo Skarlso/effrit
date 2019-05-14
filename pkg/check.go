@@ -4,6 +4,7 @@ package pkg
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +14,9 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/google/go-github/github"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -26,7 +30,7 @@ const (
 
 // Check will run an analysis of packages and detect if a new dependency has been added
 // to package.
-func Check(projectName string, parallel int) error {
+func Check(projectName string, parallel int, owner, repo string, prNumber int) error {
 	if _, err := os.Stat(EffritFileName); err != nil {
 		if os.IsNotExist(err) {
 			return errors.New(EffritFileName)
@@ -78,10 +82,7 @@ func Check(projectName string, parallel int) error {
 		}
 	}
 	if len(ownersToContact) > 0 {
-		fmt.Println("Following people need to be contacted: ")
-		toContact := strings.Join(ownersToContact, ",")
-		fmt.Printf("[%s]", toContact)
-		return nil
+		return contactOwners(ownersToContact, owner, repo, prNumber)
 	}
 	fmt.Println("Everything is the same. Carry on.")
 	return nil
@@ -107,4 +108,21 @@ func getOwnerForFile(dir string, files []string) (string, error) {
 		_ = file.Close()
 	}
 	return "", nil
+}
+
+func contactOwners(owners []string, owner, repo string, n int) error {
+	token := os.Getenv("EFFRIT_GITHUB_TOKEN")
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+
+	client := github.NewClient(tc)
+	com := "This is my comment"
+	comment := github.PullRequestComment{
+		Body: &com,
+	}
+	_, _, err := client.PullRequests.CreateComment(ctx, owner, repo, n, &comment)
+	return err
 }
