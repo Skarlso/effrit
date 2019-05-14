@@ -4,15 +4,18 @@ package pkg
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/google/go-github/github"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -26,7 +29,7 @@ const (
 
 // Check will run an analysis of packages and detect if a new dependency has been added
 // to package.
-func Check(projectName string, parallel int) error {
+func Check(projectName string, parallel int, owner, repo string, prNumber int) error {
 	if _, err := os.Stat(EffritFileName); err != nil {
 		if os.IsNotExist(err) {
 			return errors.New(EffritFileName)
@@ -62,28 +65,30 @@ func Check(projectName string, parallel int) error {
 	data, _ = ioutil.ReadFile(EffritFileName)
 	_ = json.Unmarshal(data, &packages)
 
-	ownersToContact := make([]string, 0)
+	ownersToContact := make(map[string]string)
 	// Compare the new result with the old result's map data.
 	for _, p := range packages.Packages {
 		dependents := packageMap[p.FullName]
-		sort.Strings(dependents)
-		sort.Strings(p.DependedOnByNames)
-		if !reflect.DeepEqual(dependents, p.DependedOnByNames) {
-			fmt.Println("A new dependency has been added to package: ", p.FullName)
-			owner, err := getOwnerForFile(p.Dir, p.GoFiles)
-			if err != nil {
-				return err
+		for _, dep := range dependents {
+			if !contains(p.DependedOnByNames, dep) {
+				owner, err := getOwnerForFile(p.Dir, p.GoFiles)
+				if err != nil {
+					return err
+				}
+				ownersToContact[owner] = dep
+				break
 			}
-			ownersToContact = append(ownersToContact, owner)
 		}
 	}
+	ownersToContact["@Skarlso"] = "github/Skarlso/effrit/pkg"
 	if len(ownersToContact) > 0 {
-		fmt.Println("Following people need to be contacted: ")
-		toContact := strings.Join(ownersToContact, ",")
-		fmt.Printf("[%s]", toContact)
-		return nil
+		fmt.Print("Contacting owners about package dependency changes...")
+		err = contactOwners(ownersToContact, owner, repo, prNumber)
+		if err != nil {
+			return err
+		}
+		fmt.Println("done.")
 	}
-	fmt.Println("Everything is the same. Carry on.")
 	return nil
 }
 
@@ -107,4 +112,41 @@ func getOwnerForFile(dir string, files []string) (string, error) {
 		_ = file.Close()
 	}
 	return "", nil
+}
+
+func contactOwners(notify map[string]string, owner, repo string, n int) error {
+	token := os.Getenv("EFFRIT_GITHUB_TOKEN")
+	if len(token) < 1 {
+		return errors.New("please define EFFRIT_GITHUB_TOKEN in order to allow effrit to create comments")
+	}
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+
+	client := github.NewClient(tc)
+	pr, _, _ := client.PullRequests.Get(ctx, owner, repo, n)
+	c := "# Dependency Changed\n"
+	for o, dep := range notify {
+		c += fmt.Sprintf("%s please review your package. **%s** has been added as a new dependency\n", o, dep)
+	}
+	comment := github.IssueComment{
+		AuthorAssociation: pr.AuthorAssociation,
+		Body:              &c,
+	}
+	_, _, err := client.Issues.CreateComment(ctx, owner, repo, n, &comment)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func contains(a []string, elem string) bool {
+	for _, e := range a {
+		if e == elem {
+			return true
+		}
+	}
+	return false
 }
