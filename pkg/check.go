@@ -11,7 +11,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"sort"
 	"strings"
 
@@ -66,29 +65,30 @@ func Check(projectName string, parallel int, owner, repo string, prNumber int) e
 	data, _ = ioutil.ReadFile(EffritFileName)
 	_ = json.Unmarshal(data, &packages)
 
-	ownersToContact := make([]string, 0)
+	ownersToContact := make(map[string]string)
 	// Compare the new result with the old result's map data.
 	for _, p := range packages.Packages {
 		dependents := packageMap[p.FullName]
-		sort.Strings(dependents)
-		sort.Strings(p.DependedOnByNames)
-		if !reflect.DeepEqual(dependents, p.DependedOnByNames) {
-			fmt.Println("A new dependency has been added to package: ", p.FullName)
-			owner, err := getOwnerForFile(p.Dir, p.GoFiles)
-			if err != nil {
-				return err
+		for _, dep := range dependents {
+			if !contains(p.DependedOnByNames, dep) {
+				owner, err := getOwnerForFile(p.Dir, p.GoFiles)
+				if err != nil {
+					return err
+				}
+				ownersToContact[owner] = dep
+				break
 			}
-			ownersToContact = append(ownersToContact, owner)
 		}
 	}
-	err = contactOwners(ownersToContact, owner, repo, prNumber)
-	if err != nil {
-		return err
-	}
+	ownersToContact["@Skarlso"] = "github/Skarlso/effrit/pkg"
 	if len(ownersToContact) > 0 {
-		return contactOwners(ownersToContact, owner, repo, prNumber)
+		fmt.Print("Contacting owners about package dependency changes...")
+		err = contactOwners(ownersToContact, owner, repo, prNumber)
+		if err != nil {
+			return err
+		}
+		fmt.Println("done.")
 	}
-	fmt.Println("Everything is the same. Carry on.")
 	return nil
 }
 
@@ -114,7 +114,7 @@ func getOwnerForFile(dir string, files []string) (string, error) {
 	return "", nil
 }
 
-func contactOwners(owners []string, owner, repo string, n int) error {
+func contactOwners(notify map[string]string, owner, repo string, n int) error {
 	token := os.Getenv("EFFRIT_GITHUB_TOKEN")
 	if len(token) < 1 {
 		return errors.New("please define EFFRIT_GITHUB_TOKEN in order to allow effrit to create comments")
@@ -126,17 +126,27 @@ func contactOwners(owners []string, owner, repo string, n int) error {
 	tc := oauth2.NewClient(ctx, ts)
 
 	client := github.NewClient(tc)
-	com := "This is my comment"
-	path := "pkg/check.go"
-	position := 0
-	commitID := "80483064de6ea27454e6e7e4baea587ea0d4b0ea"
-	comment := github.PullRequestComment{
-		Body:     &com,
-		Path:     &path,
-		Position: &position,
-		CommitID: &commitID,
+	pr, _, _ := client.PullRequests.Get(ctx, owner, repo, n)
+	c := "# Dependency Changed\n"
+	for o, dep := range notify {
+		c += fmt.Sprintf("%s please review your package. **%s** has been added as a new dependency\n", o, dep)
 	}
-	fmt.Println(owner, repo, n)
-	_, _, err := client.PullRequests.CreateComment(ctx, owner, repo, n, &comment)
-	return err
+	comment := github.IssueComment{
+		AuthorAssociation: pr.AuthorAssociation,
+		Body:              &c,
+	}
+	_, _, err := client.Issues.CreateComment(ctx, owner, repo, n, &comment)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func contains(a []string, elem string) bool {
+	for _, e := range a {
+		if e == elem {
+			return true
+		}
+	}
+	return false
 }
