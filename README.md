@@ -93,3 +93,41 @@ Effrit now dumps data as JSON file into the project root directly. Until I finis
    ]
 }
 ```
+
+# Running Effrit as a PR checker
+
+Effrit now supports an exciting command. Effrit can be used as a monitor for package owners to see if a new dependency has been added to a package in a PR. Effrit sports a new command called `check-pr`. This can be executed as part of a PR checker.
+
+Check PR must be called with the following parameters:
+
+```bash
+effrit check-pr -o Skarlso -q 7 -r effrit -p effrit
+# OR
+effrit check-pr --owner Skarlso --pr-number 7 --repo effrit --project-name effrit
+```
+
+This will compare the file that currently resides in the branch, called `.effrit_package_data.json` with a newly generated one.
+
+If it detects that there are dependencies that weren't there before, Effrit, using a github token, will tag the owner of the package in the PR like this:
+
+![tagging.png](./img/tagging.png)
+
+The owner comes from a comment in the Go file itself, like this:
+
+```go
+// Package pkg will save the universe from Thanos.
+// @package_owner = @Skarlso
+package pkg
+
+func MyAwesomeFunc() {
+   // Do something interesting.
+}
+```
+
+Effrit will look in the package in all the Go files until it finds an owner. If not it will tag no-one but still comment.
+
+It will not fail the PR, it will just leave a comment. If there are multiple people it will tag everyone in a single comment.
+
+# Contributions
+
+Are always welcomed!
