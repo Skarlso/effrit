@@ -1,4 +1,4 @@
-// @package_author = @skarlso
+// @package_owner = @skarlso
 package cmd
 
 import (
@@ -27,5 +27,11 @@ func init() {
 }
 
 func scan(cmd *cobra.Command, args []string) error {
-	return pkg.Scan(scanCmdOptions.projectName, scanCmdOptions.parallelFiles)
+	pkgs, err := pkg.Scan(scanCmdOptions.projectName, scanCmdOptions.parallelFiles)
+	if err != nil {
+		return err
+	}
+	pkgs.Display()
+	pkgs.Dump()
+	return nil
 }

@@ -1,4 +1,4 @@
-// @package_author = @skarlso
+// @package_owner = @skarlso
 package main
 
 import (

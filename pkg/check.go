@@ -1,5 +1,5 @@
-// Some comment
-// @package_author = @skarlso
+// Package pkg has the main brains of Effrit.
+// @package_owner = @skarlso
 package pkg
 
 import (
@@ -16,10 +16,16 @@ import (
 )
 
 const (
+	// EffritFileName sets the name of the file Effrit is using to save package data.
 	EffritFileName = ".effrit_package_data.json"
-	CommentTag     = "@package_author"
+	// CommentTag is the name of the tag.
+	CommentTag = "@package_owner"
+	// CommentFormat is the format used to parse a line for owner name.
+	CommentFormat = "// " + CommentTag + " = %s"
 )
 
+// Check will run an analysis of packages and detect if a new dependency has been added
+// to package.
 func Check(projectName string, parallel int) error {
 	if _, err := os.Stat(EffritFileName); err != nil {
 		if os.IsNotExist(err) {
@@ -48,7 +54,7 @@ func Check(projectName string, parallel int) error {
 		packageMap[p.FullName] = p.DependedOnByNames
 	}
 
-	err = Scan(projectName, parallel)
+	_, err = Scan(projectName, parallel)
 	if err != nil {
 		return err
 	}
@@ -56,6 +62,7 @@ func Check(projectName string, parallel int) error {
 	data, _ = ioutil.ReadFile(EffritFileName)
 	_ = json.Unmarshal(data, &packages)
 
+	ownersToContact := make([]string, 0)
 	// Compare the new result with the old result's map data.
 	for _, p := range packages.Packages {
 		dependents := packageMap[p.FullName]
@@ -67,9 +74,16 @@ func Check(projectName string, parallel int) error {
 			if err != nil {
 				return err
 			}
-			fmt.Println("Contacting owner: ", owner)
+			ownersToContact = append(ownersToContact, owner)
 		}
 	}
+	if len(ownersToContact) > 0 {
+		fmt.Println("Following people need to be contacted: ")
+		toContact := strings.Join(ownersToContact, ",")
+		fmt.Printf("[%s]", toContact)
+		return nil
+	}
+	fmt.Println("Everything is the same. Carry on.")
 	return nil
 }
 
@@ -85,7 +99,7 @@ func getOwnerForFile(dir string, files []string) (string, error) {
 			line := fs.Text()
 			if strings.Contains(line, CommentTag) {
 				var owner string
-				_, _ = fmt.Sscanf(line, "// @package_author = %s", &owner)
+				_, _ = fmt.Sscanf(line, CommentFormat, &owner)
 				_ = file.Close()
 				return owner, nil
 			}

@@ -98,7 +98,7 @@ func (pkg *Packages) CalculateAbstractnessOfPackages() {
 		var wg sync.WaitGroup
 		funcCount := 0.0
 		abstractsCount := 0.0
-		fmt.Printf("Scanning %s go file(s) in package %s.\n", keyName.Sprint(len(p.GoFiles)), keyName.Sprint(p.FullName))
+		// fmt.Printf("Scanning %s go file(s) in package %s.\n", keyName.Sprint(len(p.GoFiles)), keyName.Sprint(p.FullName))
 		sem := make(chan int, pkg.semaphore)
 		errChan := make(chan error, len(p.GoFiles))
 		funcChan := make(chan float64, len(p.GoFiles))
