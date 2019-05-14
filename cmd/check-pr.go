@@ -27,7 +27,7 @@ func init() {
 	checkCmd.Flags().IntVarP(&checkCmdOptions.parallelFiles, "parallel-files", "n", 5, "Define the maximum number of files processed in parallel.")
 	checkCmd.Flags().StringVarP(&checkCmdOptions.projectName, "owner", "o", "", "The owner of the repository.")
 	checkCmd.Flags().StringVarP(&checkCmdOptions.projectName, "repo", "r", "", "The repository name to use to find the PR to comment on.")
-	checkCmd.Flags().IntVarP(&checkCmdOptions.parallelFiles, "pr-number", "q", -1, "The PR to submit messages to in case that is needed.")
+	checkCmd.Flags().IntVarP(&checkCmdOptions.prNumber, "pr-number", "q", -1, "The PR to submit messages to in case that is needed.")
 	RootCmd.AddCommand(checkCmd)
 }
 

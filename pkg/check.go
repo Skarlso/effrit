@@ -112,6 +112,9 @@ func getOwnerForFile(dir string, files []string) (string, error) {
 
 func contactOwners(owners []string, owner, repo string, n int) error {
 	token := os.Getenv("EFFRIT_GITHUB_TOKEN")
+	if len(token) < 1 {
+		return errors.New("please define EFFRIT_GITHUB_TOKEN in order to allow effrit to create comments")
+	}
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
