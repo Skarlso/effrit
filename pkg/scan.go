@@ -68,7 +68,10 @@ func Scan(projectName string, parallel int) (*Packages, error) {
 	sort.Strings(pkgs.packageNames)
 	pkgs.GatherDependedOnByCount()
 	pkgs.CalculateInstability()
-	pkgs.CalculateAbstractnessOfPackages()
+	err = pkgs.CalculateAbstractnessOfPackages()
+	if err != nil {
+		return pkgs, err
+	}
 	pkgs.CalculateDistance()
 	return pkgs, nil
 }

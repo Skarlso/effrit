@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -93,7 +94,7 @@ func abs(a float64) float64 {
 
 // CalculateAbstractnessOfPackages will walk all the files in the package
 // and analyses abstractness.
-func (pkg *Packages) CalculateAbstractnessOfPackages() {
+func (pkg *Packages) CalculateAbstractnessOfPackages() error {
 	for k, p := range pkg.packageMap {
 		var wg sync.WaitGroup
 		funcCount := 0.0
@@ -124,7 +125,7 @@ func (pkg *Packages) CalculateAbstractnessOfPackages() {
 				fmt.Println(e)
 			}
 			fmt.Println("Please fix these before continuing.")
-			os.Exit(1)
+			return errors.New("unable to process all files")
 		}
 		for a := range absChan {
 			abstractsCount += a
@@ -132,9 +133,13 @@ func (pkg *Packages) CalculateAbstractnessOfPackages() {
 		for a := range funcChan {
 			funcCount += a
 		}
+		if funcCount == 0 {
+			funcCount = 1
+		}
 		p.Abstractness = abstractsCount / funcCount
 		pkg.packageMap[k] = p
 	} // packages
+	return nil
 }
 
 func parseGoFile(fh, dir string,
