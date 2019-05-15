@@ -2,6 +2,8 @@
 
 # Effrit
 
+[![Build Status](https://travis-ci.org/Skarlso/effrit.svg?branch=master)](https://travis-ci.org/Skarlso/effrit)
+
 Go Efferent and Afferent package metric calculator.
 
 Metrics calculated currently by this package:
