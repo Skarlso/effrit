@@ -13,8 +13,7 @@ func TestGatherDependentOnByCount(t *testing.T) {
 		"github.com/Test/Test": {
 			Name:               "Test",
 			FullName:           "github.com/Test/Test",
-			Imports:            []string{"github.com/Test/Test3"},
-			ImportCount:        1,
+			ImportCount:        0.0,
 			Stability:          0.0,
 			Abstractness:       0.0,
 			DistanceFromMedian: 0.0,
@@ -25,7 +24,7 @@ func TestGatherDependentOnByCount(t *testing.T) {
 			Name:               "Test2",
 			FullName:           "github.com/Test/Test2",
 			Imports:            []string{"github.com/Test/Test"},
-			ImportCount:        1,
+			ImportCount:        1.0,
 			Stability:          0.0,
 			Abstractness:       0.0,
 			DistanceFromMedian: 0.0,
@@ -37,6 +36,13 @@ func TestGatherDependentOnByCount(t *testing.T) {
 	pkgs.GatherDependedOnByCount()
 	if pkgs.packageMap["github.com/Test/Test"].DependedOnByCount < 1 {
 		t.Fatal("dependedOnByCount should have been greater than 0")
+	}
+	pkgs.CalculateInstability()
+	if pkgs.packageMap["github.com/Test/Test"].Stability != 0.0 {
+		t.Fatal("Stability of package test should have been 1.0. was: ", pkgs.packageMap["github.com/Test/Test"].Stability)
+	}
+	if pkgs.packageMap["github.com/Test/Test2"].Stability != 1.0 {
+		t.Fatal("Stability of package test2 should have been 0.0. was: ", pkgs.packageMap["github.com/Test/Test2"].Stability)
 	}
 }
 
@@ -62,7 +68,7 @@ func someFunction() {
 			Name:               "Test",
 			FullName:           "github.com/Test/Test",
 			Imports:            []string{"github.com/Test/Test3"},
-			ImportCount:        1,
+			ImportCount:        1.0,
 			Stability:          0.0,
 			Abstractness:       0.0,
 			DistanceFromMedian: 0.0,
@@ -73,7 +79,7 @@ func someFunction() {
 			Name:               "Test2",
 			FullName:           "github.com/Test/Test2",
 			Imports:            []string{"github.com/Test/Test"},
-			ImportCount:        1,
+			ImportCount:        1.0,
 			Stability:          0.0,
 			Abstractness:       0.0,
 			DistanceFromMedian: 0.0,
