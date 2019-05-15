@@ -18,11 +18,13 @@ they are in. It will gather all defined packages.
 var scanCmdOptions struct {
 	projectName   string
 	parallelFiles int
+	colorMode     bool
 }
 
 func init() {
 	scanCmd.Flags().StringVarP(&scanCmdOptions.projectName, "project-name", "p", "", "Define the name of the project.")
 	scanCmd.Flags().IntVarP(&scanCmdOptions.parallelFiles, "parallel-files", "n", 5, "Define the maximum number of files processed in parallel. ")
+	scanCmd.Flags().BoolVarP(&scanCmdOptions.colorMode, "color", "c", false, "Color mode.")
 	RootCmd.AddCommand(scanCmd)
 }
 
@@ -31,7 +33,7 @@ func scan(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	pkgs.Display()
+	pkgs.Display(scanCmdOptions.colorMode)
 	pkgs.Dump()
 	return nil
 }

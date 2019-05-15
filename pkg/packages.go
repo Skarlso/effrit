@@ -190,7 +190,7 @@ var green = color.New(color.FgGreen, color.Bold)
 
 // Display displays the analysed information in a pretty way...
 // TODO: Add multiple display options and Graph generation.
-func (pkg *Packages) Display() {
+func (pkg *Packages) Display(colorMode bool) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"NAME", "STABILITY", "ABSTRACTNESS", "DISTANCE"})
 	for _, pname := range pkg.packageNames {
@@ -206,7 +206,11 @@ func (pkg *Packages) Display() {
 		stability := fmt.Sprintf("%.1f", p.Stability)
 		abstractness := fmt.Sprintf("%.1f", p.Abstractness)
 		distance := fmt.Sprintf("%.1f", p.DistanceFromMedian)
-		table.Append([]string{p.FullName, c.Sprint(stability), keyName.Sprint(abstractness), keyName.Sprint(distance)})
+		row := []string{p.FullName, stability, abstractness, distance}
+		if colorMode {
+			row = []string{p.FullName, c.Sprint(stability), keyName.Sprint(abstractness), keyName.Sprint(distance)}
+		}
+		table.Append(row)
 	}
 	table.Render()
 }
