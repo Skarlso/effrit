@@ -57,10 +57,11 @@ func Check(projectName string, parallel int, owner, repo string, prNumber int) e
 		packageMap[p.FullName] = p.DependedOnByNames
 	}
 
-	_, err = Scan(projectName, parallel)
+	pkgs, err := Scan(projectName, parallel)
 	if err != nil {
 		return err
 	}
+	pkgs.Dump()
 	packages.Packages = make([]Package, 0)
 	data, _ = ioutil.ReadFile(EffritFileName)
 	_ = json.Unmarshal(data, &packages)
