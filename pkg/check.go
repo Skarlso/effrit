@@ -81,7 +81,6 @@ func Check(projectName string, parallel int, owner, repo string, prNumber int) e
 			}
 		}
 	}
-	ownersToContact["@Skarlso"] = "github/Skarlso/effrit/pkg"
 	if len(ownersToContact) > 0 {
 		fmt.Print("Contacting owners about package dependency changes...")
 		err = contactOwners(ownersToContact, owner, repo, prNumber)
