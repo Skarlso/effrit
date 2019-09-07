@@ -104,8 +104,8 @@ func (pkg *Packages) CalculateAbstractnessOfPackages() error {
 		errChan := make(chan error, len(p.GoFiles))
 		funcChan := make(chan float64, len(p.GoFiles))
 		absChan := make(chan float64, len(p.GoFiles))
+		wg.Add(len(p.GoFiles))
 		for _, f := range p.GoFiles {
-			wg.Add(1)
 			go parseGoFile(f, p.Dir, funcChan, absChan, sem, errChan, &wg)
 		} // go files in packages
 		wg.Wait()
