@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/Skarlso/effrit/cmd"
+	_ "github.com/Skarlso/effrit/cmd/check"
 )
 
 func main() {

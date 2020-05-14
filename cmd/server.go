@@ -22,14 +22,14 @@ var serverCmdOptions struct {
 }
 
 func init() {
-	checkCmd.Flags().BoolVar(&serverCmdOptions.AutoTLS, "auto-tls", false, "--auto-tls")
-	checkCmd.Flags().StringVar(&serverCmdOptions.CacheDir, "cache-dir", "", "--cache-dir /home/user/.server/.cache")
-	checkCmd.Flags().StringVar(&serverCmdOptions.ServerKeyPath, "server-key-path", "", "--server-key-file /home/user/.server/server.key")
-	checkCmd.Flags().StringVar(&serverCmdOptions.ServerCrtPath, "server-crt-path", "", "--server-crt-file /home/user/.server/server.crt")
-	checkCmd.Flags().StringVar(&serverCmdOptions.Port, "port", "9998", "--port 443")
-	checkCmd.Flags().StringVar(&serverCmdOptions.Hostname, "hostname", "localhost", "--hostname pr-check.example.com")
-	checkCmd.Flags().StringVarP(&serverCmdOptions.ProjectName, "project-name", "p", "", "Define the name of the project.")
-	checkCmd.Flags().IntVarP(&serverCmdOptions.Parallel, "parallel-files", "n", 5, "Define the maximum number of files processed in parallel.")
+	serverCmd.Flags().BoolVar(&serverCmdOptions.AutoTLS, "auto-tls", false, "--auto-tls")
+	serverCmd.Flags().StringVar(&serverCmdOptions.CacheDir, "cache-dir", "", "--cache-dir /home/user/.server/.cache")
+	serverCmd.Flags().StringVar(&serverCmdOptions.ServerKeyPath, "server-key-path", "", "--server-key-file /home/user/.server/server.key")
+	serverCmd.Flags().StringVar(&serverCmdOptions.ServerCrtPath, "server-crt-path", "", "--server-crt-file /home/user/.server/server.crt")
+	serverCmd.Flags().StringVar(&serverCmdOptions.Port, "port", "9998", "--port 443")
+	serverCmd.Flags().StringVar(&serverCmdOptions.Hostname, "hostname", "localhost", "--hostname pr-check.example.com")
+	serverCmd.Flags().StringVarP(&serverCmdOptions.ProjectName, "project-name", "p", "", "Define the name of the project.")
+	serverCmd.Flags().IntVarP(&serverCmdOptions.Parallel, "parallel-files", "n", 5, "Define the maximum number of files processed in parallel.")
 	RootCmd.AddCommand(serverCmd)
 }
 

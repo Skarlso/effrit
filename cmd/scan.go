@@ -22,8 +22,8 @@ var scanCmdOptions struct {
 }
 
 func init() {
-	scanCmd.Flags().StringVarP(&scanCmdOptions.projectName, "project-name", "p", "", "Define the name of the project.")
-	scanCmd.Flags().IntVarP(&scanCmdOptions.parallelFiles, "parallel-files", "n", 5, "Define the maximum number of files processed in parallel. ")
+	scanCmd.Flags().StringVarP(&scanCmdOptions.projectName, "scan-project-name", "p", "", "Define the name of the project.")
+	scanCmd.Flags().IntVarP(&scanCmdOptions.parallelFiles, "scan-parallel-files", "n", 5, "Define the maximum number of files processed in parallel. ")
 	scanCmd.Flags().BoolVarP(&scanCmdOptions.colorMode, "color", "c", false, "Color mode.")
 	RootCmd.AddCommand(scanCmd)
 }
