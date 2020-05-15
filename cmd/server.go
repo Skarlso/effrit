@@ -27,7 +27,7 @@ func init() {
 	serverCmd.Flags().StringVar(&serverCmdOptions.ServerKeyPath, "server-key-path", "", "--server-key-file /home/user/.server/server.key")
 	serverCmd.Flags().StringVar(&serverCmdOptions.ServerCrtPath, "server-crt-path", "", "--server-crt-file /home/user/.server/server.crt")
 	serverCmd.Flags().StringVar(&serverCmdOptions.Port, "port", "9998", "--port 443")
-	serverCmd.Flags().StringVar(&serverCmdOptions.Hostname, "hostname", "localhost", "--hostname pr-check.example.com")
+	serverCmd.Flags().StringVar(&serverCmdOptions.Hostname, "hostname", "0.0.0.0", "--hostname pr-check.example.com")
 	serverCmd.Flags().StringVarP(&serverCmdOptions.ProjectName, "project-name", "p", "", "Define the name of the project.")
 	serverCmd.Flags().IntVarP(&serverCmdOptions.Parallel, "parallel-files", "n", 5, "Define the maximum number of files processed in parallel.")
 	RootCmd.AddCommand(serverCmd)
