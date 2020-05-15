@@ -3,6 +3,7 @@ package cmd
 
 import (
 	"github.com/Skarlso/effrit/pkg"
+	"github.com/Skarlso/effrit/pkg/testthis"
 	"github.com/spf13/cobra"
 )
 
@@ -33,6 +34,7 @@ func scan(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	testthis.ImportThis()
 	pkgs.Display(scanCmdOptions.colorMode)
 	pkgs.Dump()
 	return nil
