@@ -11,13 +11,11 @@ require (
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.3.0 // indirect
 	github.com/mattn/go-runewidth v0.0.4 // indirect
-	github.com/mitchellh/gox v1.0.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/rs/zerolog v1.18.0
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/valyala/fasttemplate v1.1.0 // indirect
-	golang.org/dl v0.0.0-20200414231856-f86334ee252a // indirect
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
 )
