@@ -130,16 +130,6 @@ Effrit will look in the package in all the Go files until it finds an owner. If 
 
 It will not fail the PR, it will just leave a comment. If there are multiple people it will tag everyone in a single comment.
 
-# Using as a Server
-
-Effrit now can be executed as a github webhook server listening for PR created events.
-
-Effrit will take that event, and do a pr-check described above on every PR created. It's important to define the project-name
-for ever server instance of effirt running and listening for different projects. Right now, you can run a single effirt instance
-for multiple projects.
-
-That's an upcoming feature.
-
 # Contributions
 
 Are always welcomed!

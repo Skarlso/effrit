@@ -44,8 +44,7 @@ func Check(projectName string, parallel int, owner, repo string, prNumber int) e
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(data, &packages)
-	if err != nil {
+	if err := json.Unmarshal(data, &packages); err != nil {
 		return err
 	}
 
@@ -83,8 +82,7 @@ func Check(projectName string, parallel int, owner, repo string, prNumber int) e
 	}
 	if len(ownersToContact) > 0 {
 		fmt.Print("Contacting owners about package dependency changes...")
-		err = contactOwners(ownersToContact, owner, repo, prNumber)
-		if err != nil {
+		if err := contactOwners(ownersToContact, owner, repo, prNumber); err != nil {
 			return err
 		}
 		fmt.Println("done.")
@@ -135,8 +133,7 @@ func contactOwners(notify map[string]string, owner, repo string, n int) error {
 		AuthorAssociation: pr.AuthorAssociation,
 		Body:              &c,
 	}
-	_, _, err := client.Issues.CreateComment(ctx, owner, repo, n, &comment)
-	if err != nil {
+	if _, _, err := client.Issues.CreateComment(ctx, owner, repo, n, &comment); err != nil {
 		return err
 	}
 	return nil
