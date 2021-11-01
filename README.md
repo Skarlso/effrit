@@ -103,9 +103,9 @@ Effrit now supports an exciting command. Effrit can be used as a monitor for pac
 Check PR must be called with the following parameters:
 
 ```bash
-effrit check-pr -o Skarlso -q 7 -r effrit -p effrit
+effrit check pr -o Skarlso -q 7 -r effrit -p effrit
 # OR
-effrit check-pr --owner Skarlso --pr-number 7 --repo effrit --project-name effrit
+effrit check pr --owner Skarlso --pr-number 7 --repo effrit --project-name effrit
 ```
 
 This will compare the file that currently resides in the branch, called `.effrit_package_data.json` with a newly generated one.
