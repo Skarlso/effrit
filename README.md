@@ -130,6 +130,37 @@ Effrit will look in the package in all the Go files until it finds an owner. If 
 
 It will not fail the PR, it will just leave a comment. If there are multiple people it will tag everyone in a single comment.
 
+## As a Github Action
+
+The PR checker can also be run as a Github action. Sample workflow file:
+
+```yaml
+name: Effrit
+
+on: pull_request
+
+jobs:
+  effrit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Unshallow
+        run: git fetch --prune --unshallow
+      - name: Effrit
+        uses: skarlso/effrit
+        with:
+          pr_number: ${{ github.event.pull_request.number }}
+          owner: Skarlso
+          repo: effrit
+          project_name: effrit
+          parallel_files: 5
+        env:
+          EFFRIT_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+Another way of setting the owner and repo is using github action context like `${{ github.event.pull_request.head.repo.owner.login }}`.
+
 # Contributions
 
 Are always welcomed!
