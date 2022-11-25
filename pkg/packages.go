@@ -9,6 +9,7 @@ import (
 	"go/token"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
 	"sync"
@@ -30,6 +31,42 @@ type Package struct {
 	DistanceFromMedian float64
 	Dir                string
 	GoFiles            []string
+}
+
+// MarshalJSON returns a JSON encoding of Package
+func (p Package) MarshalJSON() ([]byte, error) {
+	j := struct {
+		Name               string
+		FullName           string
+		Imports            []string
+		ImportCount        float64
+		DependedOnByCount  float64
+		DependedOnByNames  []string
+		Stability          *float64 `json:",omitempty"`
+		Abstractness       float64
+		DistanceFromMedian *float64 `json:",omitempty"`
+		Dir                string
+		GoFiles            []string
+	}{
+		Name:              p.Name,
+		FullName:          p.FullName,
+		Imports:           p.Imports,
+		ImportCount:       p.ImportCount,
+		DependedOnByCount: p.DependedOnByCount,
+		DependedOnByNames: p.DependedOnByNames,
+		Abstractness:      p.Abstractness,
+		Dir:               p.Dir,
+		GoFiles:           p.GoFiles,
+	}
+
+	if !math.IsNaN(p.Stability) {
+		j.Stability = &p.Stability
+	}
+	if !math.IsNaN(p.DistanceFromMedian) {
+		j.DistanceFromMedian = &p.DistanceFromMedian
+	}
+
+	return json.Marshal(j)
 }
 
 // Packages represents a collection of packages.
