@@ -173,7 +173,7 @@ func (pkg *Packages) CalculateAbstractnessOfPackages() error {
 		if funcCount == 0 {
 			funcCount = 1
 		}
-		p.Abstractness = abstractsCount / funcCount
+		p.Abstractness = abstractsCount / (funcCount + abstractsCount)
 		pkg.packageMap[k] = p
 	} // packages
 	return nil

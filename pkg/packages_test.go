@@ -93,8 +93,8 @@ func someFunction() {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if pkgs.packageMap["github.com/Test/Test"].Abstractness != 1.0 {
-		t.Fatal("Abstractness of package test should have been 1.0. was: ", pkgs.packageMap["github.com/Test/Test"].Abstractness)
+	if pkgs.packageMap["github.com/Test/Test"].Abstractness != 0.5 {
+		t.Fatal("Abstractness of package test should have been 0.5. was: ", pkgs.packageMap["github.com/Test/Test"].Abstractness)
 	}
 	if pkgs.packageMap["github.com/Test/Test2"].Abstractness != 0.0 {
 		t.Fatal("Abstractness of package test2 should have been 0.0. was: ", pkgs.packageMap["github.com/Test/Test2"].Abstractness)
