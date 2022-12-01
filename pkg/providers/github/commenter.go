@@ -29,6 +29,5 @@ func NewGithubCommenter(cfg Config, deps Dependencies) providers.Commenter {
 
 // Comment will create a comment on a PR.
 func (p *githubCommenter) Comment(owner string, repo string, number int) error {
-	pkg.Check(p.Config.ProjectName, p.Config.Parallel, owner, repo, number)
-	return nil
+	return pkg.Check(p.Config.ProjectName, p.Config.Parallel, owner, repo, number)
 }

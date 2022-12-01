@@ -7,7 +7,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"io/ioutil"
 	"log"
 	"math"
 	"os"
@@ -196,7 +195,7 @@ func parseGoFile(fh, dir string,
 		return
 	}
 	/* #nosec */
-	data, err := ioutil.ReadFile(filepath.Join(dir, fh))
+	data, err := os.ReadFile(filepath.Join(dir, fh))
 	if err != nil {
 		errChan <- err
 		return
@@ -273,7 +272,7 @@ func (pkg *Packages) Dump() {
 	if err != nil {
 		log.Fatal("error marshaling to json: ", err)
 	}
-	err = ioutil.WriteFile(".effrit_package_data.json", data, 0666)
+	err = os.WriteFile(".effrit_package_data.json", data, 0666)
 	if err != nil {
 		log.Fatal("error while writing json file: ", err)
 	}

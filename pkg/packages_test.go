@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -48,7 +47,7 @@ func TestGatherDependentOnByCount(t *testing.T) {
 
 func TestCalculateAbstractness(t *testing.T) {
 	pkgs := NewPackages(1)
-	tmp, _ := ioutil.TempDir("", "TestCalculateAbstractness")
+	tmp, _ := os.MkdirTemp("", "TestCalculateAbstractness")
 	main := `package test
 type s interface {
 	FunkyTime() error
@@ -61,8 +60,8 @@ func someFunction() {
 `
 	_ = os.Mkdir(filepath.Join(tmp, "test"), 0777)
 	_ = os.Mkdir(filepath.Join(tmp, "test2"), 0777)
-	_ = ioutil.WriteFile(filepath.Join(tmp, "test", "main.go"), []byte(main), 0777)
-	_ = ioutil.WriteFile(filepath.Join(tmp, "test2", "other.go"), []byte(other), 0777)
+	_ = os.WriteFile(filepath.Join(tmp, "test", "main.go"), []byte(main), 0777)
+	_ = os.WriteFile(filepath.Join(tmp, "test2", "other.go"), []byte(other), 0777)
 	testMap := map[string]Package{
 		"github.com/Test/Test": {
 			Name:               "Test",
