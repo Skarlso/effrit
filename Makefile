@@ -25,7 +25,7 @@ bootstrap:
 	go get github.com/mitchellh/gox
 
 .PHONY: test
-test:
+test: lint
 	go test ./...
 
 .PHONY: clean
@@ -33,7 +33,7 @@ clean:
 	go clean -i
 
 lint:
-	golint -set_exit_status ./...
+	golangci-lint run ./...
 
 .PHONY: start-https
 start-https:

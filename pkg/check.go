@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -40,7 +39,7 @@ func Check(projectName string, parallel int, owner, repo string, prNumber int) e
 	}{
 		Packages: make([]Package, 0),
 	}
-	data, err := ioutil.ReadFile(EffritFileName)
+	data, err := os.ReadFile(EffritFileName)
 	if err != nil {
 		return err
 	}
@@ -62,7 +61,7 @@ func Check(projectName string, parallel int, owner, repo string, prNumber int) e
 	}
 	pkgs.Dump()
 	packages.Packages = make([]Package, 0)
-	data, _ = ioutil.ReadFile(EffritFileName)
+	data, _ = os.ReadFile(EffritFileName)
 	_ = json.Unmarshal(data, &packages)
 
 	ownersToContact := make(map[string]string)
