@@ -1,8 +1,8 @@
 package pkg
 
 import (
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -11,10 +11,10 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"sync"
 
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
+	"golang.org/x/sync/errgroup"
 )
 
 // Package is a single package as determined by go list.
@@ -132,37 +132,32 @@ func abs(a float64) float64 {
 // and analyses abstractness.
 func (pkg *Packages) CalculateAbstractnessOfPackages() error {
 	for k, p := range pkg.packageMap {
-		var wg sync.WaitGroup
+		g, _ := errgroup.WithContext(context.Background())
+
 		funcCount := 0.0
 		abstractsCount := 0.0
 		// fmt.Printf("Scanning %s go file(s) in package %s.\n", keyName.Sprint(len(p.GoFiles)), keyName.Sprint(p.FullName))
 		sem := make(chan int, pkg.semaphore)
-		errChan := make(chan error, len(p.GoFiles))
 		funcChan := make(chan float64, len(p.GoFiles))
 		absChan := make(chan float64, len(p.GoFiles))
-		wg.Add(len(p.GoFiles))
 		for _, f := range p.GoFiles {
-			go parseGoFile(f, p.Dir, funcChan, absChan, sem, errChan, &wg)
+			f := f
+			g.Go(func() error {
+				sem <- 1
+				defer func() { <-sem }()
+
+				return parseGoFile(f, p.Dir, funcChan, absChan)
+			})
 		} // go files in packages
-		wg.Wait()
+
+		if err := g.Wait(); err != nil {
+			return fmt.Errorf("failed to prase go files: %w", err)
+		}
+
 		// Need to close the channels here to be able to for on them.
 		close(funcChan)
 		close(absChan)
-		close(errChan)
 
-		errorList := make([]error, 0)
-		for e := range errChan {
-			errorList = append(errorList, e)
-		}
-		if len(errorList) > 0 {
-			fmt.Printf("%d error(s) processing pkg %s\n", len(errorList), p.FullName)
-			fmt.Println("listing error(s):")
-			for _, e := range errorList {
-				fmt.Println(e)
-			}
-			fmt.Println("Please fix these before continuing.")
-			return errors.New("unable to process all files")
-		}
 		for a := range absChan {
 			abstractsCount += a
 		}
@@ -178,32 +173,22 @@ func (pkg *Packages) CalculateAbstractnessOfPackages() error {
 	return nil
 }
 
-func parseGoFile(fh, dir string,
-	funcChan, absChan chan float64,
-	sem chan int,
-	errChan chan error,
-	wg *sync.WaitGroup) {
-
-	defer wg.Done()
-	sem <- 1
-	defer func() { <-sem }()
+func parseGoFile(fh, dir string, funcChan, absChan chan float64) error {
 	funcCount := 0.0
 	abstractsCount := 0.0
 	fset := token.NewFileSet()
 	if len(fh) < 1 {
 		fmt.Println("skipping folder... file is empty:", dir)
-		return
+		return nil
 	}
 	/* #nosec */
 	data, err := os.ReadFile(filepath.Join(dir, fh))
 	if err != nil {
-		errChan <- err
-		return
+		return fmt.Errorf("failed to read file: %w", err)
 	}
 	node, err := parser.ParseFile(fset, fh, data, 0)
 	if err != nil {
-		errChan <- err
-		return
+		return fmt.Errorf("failed to parse file: %w", err)
 	}
 	ast.Inspect(node, func(n ast.Node) bool {
 		switch n.(type) {
@@ -222,6 +207,8 @@ func parseGoFile(fh, dir string,
 	})
 	funcChan <- funcCount
 	absChan <- abstractsCount
+
+	return nil
 }
 
 var keyName = color.New(color.FgWhite, color.Bold)

@@ -65,13 +65,14 @@ func Scan(projectName string, parallel int) (*Packages, error) {
 		pkgs.packageMap[p.FullName] = p
 		pkgs.packageNames = append(pkgs.packageNames, p.FullName)
 	}
+
 	sort.Strings(pkgs.packageNames)
 	pkgs.GatherDependedOnByCount()
 	pkgs.CalculateInstability()
-	err = pkgs.CalculateAbstractnessOfPackages()
-	if err != nil {
+	if err := pkgs.CalculateAbstractnessOfPackages(); err != nil {
 		return pkgs, err
 	}
+
 	pkgs.CalculateDistance()
 	return pkgs, nil
 }
